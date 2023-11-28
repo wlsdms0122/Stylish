@@ -18,8 +18,8 @@ public struct Styles {
 
     subscript<Configuration: StyleConfigurable>(dynamicMember member: String) -> Configuration {
         get {
-            guard let configuration = configurations[member] else { return Configuration.init() }
-            return configuration as! Configuration
+            guard let configuration = configurations[member] else { return Configuration() }
+            return (configuration as? Configuration) ?? Configuration()
         }
         set {
             configurations[member] = newValue
