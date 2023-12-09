@@ -8,7 +8,6 @@ import StylishMacros
 
 let testMacros: [String: Macro.Type] = [
     "Stylish": StylishMacro.self,
-    "Style": StyleMacro.self,
 ]
 #endif
 
@@ -16,36 +15,8 @@ final class StylishTests: XCTestCase {
     func testStylishMacro() throws {
         #if canImport(StylishMacros)
         assertMacroExpansion(
-            """
-            @Stylish
-            public struct MyView: View {
-                var body: some View {
-                    Text("Hello World")
-                }
-            }
-            """,
-            expandedSource: """
-            public struct MyView: View {
-                var body: some View {
-                    Text("Hello World")
-                }
-            }
-            
-            extension MyView: Stylish {
-            }
-            """,
-            macros: testMacros
-        )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
-    }
-    
-    func testStyleMacro() throws {
-        #if canImport(StylishMacros)
-        assertMacroExpansion(
             #"""
-            @Style
+            @Stylish
             public struct Configuration {
                 var backgroundColor: Color = .black
                 var foregroundColor: Color = .black
@@ -62,7 +33,7 @@ final class StylishTests: XCTestCase {
                 }
             }
             
-            extension Configuration: StyleConfigurable {
+            extension Configuration: Stylish {
             }
             """#,
             macros: testMacros

@@ -7,26 +7,40 @@
 
 import SwiftUI
 
-@dynamicMemberLookup
-public struct Styles {
-    public struct Key: EnvironmentKey {
-        public static var defaultValue = Styles()
-    }
-    
+@propertyWrapper
+public struct Styles<Value>: DynamicProperty {
     // MARK: - Property
-    private var configurations: [String: Any] = [:]
-
-    subscript<Configuration: StyleConfigurable>(dynamicMember member: String) -> Configuration {
-        get {
-            guard let configuration = configurations[member] else { return Configuration() }
-            return (configuration as? Configuration) ?? Configuration()
-        }
-        set {
-            configurations[member] = newValue
-        }
-    }
+    @Environment
+    private var environment: Value
+    
+    public var wrappedValue: Value { environment }
     
     // MARK: - Initializer
+    public init<S: Stylish>(
+        _ style: S.Type,
+        style keyPath: KeyPath<S, Value>
+    ) {
+        let member = String(describing: style)
+        
+        let originPath = \EnvironmentValues.container
+        let configurationPath: WritableKeyPath<StyleContainer, S> = \StyleContainer.[dynamicMember: member]
+        let stylePath = originPath.appending(path: configurationPath)
+            .appending(path: keyPath)
+        
+        self._environment = .init(stylePath)
+    }
+    
+    public init(
+        _ style: Value.Type
+    ) where Value: Stylish {
+        let member = String(describing: style)
+        
+        let originPath = \EnvironmentValues.container
+        let configurationPath: WritableKeyPath<StyleContainer, Value> = \StyleContainer.[dynamicMember: member]
+        let stylePath = originPath.appending(path: configurationPath)
+        
+        self._environment = .init(stylePath)
+    }
     
     // MARK: - Public
     

@@ -7,10 +7,6 @@
 
 import SwiftUI
 
-public protocol Stylish: View {
-    associatedtype Configuration: StyleConfigurable
-}
-
-public protocol StyleConfigurable {
+public protocol Stylish {
     init()
 }

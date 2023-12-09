@@ -1,6 +1,12 @@
+//
+//  StylishMacro.swift
+//
+//
+//  Created by jsilver on 11/26/23.
+//
+
 import SwiftSyntax
 import SwiftSyntaxMacros
-import SwiftUI
 
 public struct StylishMacro { }
 
@@ -12,10 +18,6 @@ extension StylishMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        guard let structDecl = declaration.as(StructDeclSyntax.self), structDecl.isInherited((any View).self) else {
-            throw StylishError("@Stylish can use struct and adopt View protocol only.")
-        }
-        
         let extenstion = DeclSyntax("""
             extension \(type.trimmed): Stylish { }
             """)
@@ -24,5 +26,46 @@ extension StylishMacro: ExtensionMacro {
             extenstion
         ]
             .compactMap { $0.as(ExtensionDeclSyntax.self) }
+    }
+}
+
+extension StylishMacro: MemberMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        providingMembersOf declaration: some DeclGroupSyntax,
+        in context: some MacroExpansionContext
+    ) throws -> [DeclSyntax] {
+        guard let structDecl = declaration.as(StructDeclSyntax.self) else {
+            throw StylishError("@Stylish can use struct only.")
+        }
+        
+        var initializer: DeclSyntax
+        if let accessModifier = structDecl.accessModifier?.name.text {
+            initializer = "\(raw: accessModifier) init() { }"
+        } else {
+            initializer = "init() { }"
+        }
+        
+        return [
+            initializer
+        ]
+    }
+}
+
+extension StylishMacro: MemberAttributeMacro {
+    public static func expansion(
+        of node: AttributeSyntax,
+        attachedTo declaration: some DeclGroupSyntax,
+        providingAttributesFor member: some DeclSyntaxProtocol,
+        in context: some MacroExpansionContext
+    ) throws -> [AttributeSyntax] {
+        return [
+            AttributeSyntax(
+                leadingTrivia: [.newlines(1), .spaces(2)],
+                attributeName: IdentifierTypeSyntax(
+                    name: .identifier("Config")
+                )
+            )
+        ]
     }
 }
