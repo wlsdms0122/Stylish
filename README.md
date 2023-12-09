@@ -5,7 +5,7 @@ In 2019, the UI paradigm shifted when `Apple` introduced `SwiftUI`. The styling 
 
 `Stylish` solves these problems to help you reduce boilerplate code and increase productivity.
 
-- [Stylish](#reducer)
+- [Stylish](#stylish)
 - [Requirements](#requirements)
 - [Installation](#installation)
   - [Swift Package Manager](#swift-package-manager)
@@ -26,78 +26,57 @@ In 2019, the UI paradigm shifted when `Apple` introduced `SwiftUI`. The styling 
 ## Swift Package Manager
 ```swift
 dependencies: [
-    .package(url: "https://github.com/wlsdms0122/Stylish.git", .upToNextMajor(from: "1.0.0"))
+    .package(url: "https://github.com/wlsdms0122/Stylish.git", .upToNextMajor(from: "2.0.0"))
 ]
 ```
 
 # Getting Started
-Using Stylish is straightforward. To create a styled component, add the @Stylish macro to your view.
+Using Stylish is straightforward. To create a styled component, add the @Stylish macro to your styles.
 
 ```swift
 @Stylish
-struct MyButton: View {
-    var body: some View {
-        Button {
-            // TODO: action
-        } label: {
-            Text("Touch!")
-        }
-    }
+struct MyStyle {
+    var textColor: Color = .black
 }
 ```
 
-The `@Stylish` macro automatically adopts the `Stylish` protocol. Define a `Configuration` to satisfy the protocol and to apply the style on your view.
+The `@Stylish` macro automatically adopts the `Stylish` protocol to manage configurations.
 
-And you need to add the `@Style` macro in the `Configuration`. The `@Style` macros allow you to style the view, just like using `Environment`.
-
-```swift
-@Stylish
-struct MyButton: View {
-    @Style
-    struct Configuration {
-        var foregroundColor: Color = .black
-    }
-    ...
-}
-```
-
-Finally, utilize the specified style using the `@EnvironmentConfig` property wrapper to read the style values specified in the view.
+And you can access `@Styles` property wrapper on your view to use `Stylish` styles for custom component.
 
 ```swift
-@Stylish
 struct MyButton: View {
-    @Style
-    struct Configuration {
-        var foregroundColor: Color = .black
-    }
-
     var body: some View {
         Button {
 
         } label: {
             Text("Touch!")
-                .foregroundColor(config.foregroundColor)
+                .foregroundColor(styles.textColor)
         }
     }
 
-    @EnvironmentConfig(MyButton.self)
-    var config
+    @Styles(MyStyle.self)
+    private var styles
 }
 ```
 
-That's it! Now, modify the view using the `configure(_:path:_:)` modifier.
+That's it! Now, modify the view using the `configure(_:style:to:)` modifier.
 
 ```swift
 struct ContentView: View {
     var body: some View {
         MyButton()
-            .configure(MyButton.self, path: \.foregroundColor, .green)
+            .configure(
+                MyButton.self, 
+                style: \.textColor, 
+                to: .green
+            )
     }
 }
 ```
 
 ## Config property wrapper
-The `@Style` macro automactically add `@Config` attribute on configuration's properties.
+The `@Stylish` macro automactically add `@Config` attribute on style properties.
 
 When you create custom style like `.buttonSyle(_:)`, you need to set default styles.
 
@@ -105,8 +84,8 @@ In `SwiftUI`, properties specified by the user using the view modifier have the 
 
 ```swift
 MyButton()
-    .configure(MyButton.self, path: \.style, .card)
-    .configure(MyButton.self, path: \.foregroundColor, .green)
+    .configure(MyButton.self, style: \.style, to: .card)
+    .configure(MyButton.self, style: \.foregroundColor, to: .green)
 ```
 
 For example, with a card type `MyButtonStyle` setting the foreground color of the button title to blue, subsequent styles should override this, similar to a real `ButtonStyle`.
@@ -118,13 +97,17 @@ public struct CardMyButtonStyle: MyButtonStyle {
     private struct Content: View {
         var body: some View {
             configuration.label
-                .configure(MyButton.self, path: \.foregroundColor, config.$foregroundColor(.blue))
+                .configure(
+                    MyButton.self, 
+                    style: \.foregroundColor,
+                    to: styles.$foregroundColor(.blue)
+                )
         }
         
         private let configuration: Configuration
         
-        @EnvironmentConfig(MyButton.self)
-        var config
+        @Styles(MyButton.self)
+        var styles
         
         init(_ configuration: Configuration) {
             self.configuration = configuration
