@@ -12,6 +12,5 @@ import SwiftSyntaxMacros
 struct StylishPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         StylishMacro.self,
-        StyleMacro.self
     ]
 }
