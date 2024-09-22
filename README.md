@@ -10,7 +10,7 @@ In 2019, the UI paradigm shifted when `Apple` introduced `SwiftUI`. The styling 
 - [Installation](#installation)
   - [Swift Package Manager](#swift-package-manager)
 - [Getting Started](#getting-started)
-  - [Config property wrapper](#config-property-wrapper)
+  - [Styling Component](#styling-component)
 - [Contribution](#contribution)
 - [License](#license)
 
@@ -31,18 +31,18 @@ dependencies: [
 ```
 
 # Getting Started
-Using Stylish is straightforward. To create a styled component, add the @Stylish macro to your styles.
+Using `Stylish` is straightforward. To create a styled component, add the `@Stylish` macro to your styles.
 
 ```swift
 @Stylish
-struct MyStyle {
+struct MyButtonStyles {
     var textColor: Color = .black
 }
 ```
 
 The `@Stylish` macro automatically adopts the `Stylish` protocol to manage configurations.
 
-And you can access `@Styles` property wrapper on your view to use `Stylish` styles for custom component.
+You can access the `@Styles` property wrapper in your view to use `Stylish` styles for custom components.
 
 ```swift
 struct MyButton: View {
@@ -55,7 +55,7 @@ struct MyButton: View {
         }
     }
 
-    @Styles(MyStyle.self)
+    @Styles(MyButtonStyles.self)
     private var styles
 }
 ```
@@ -66,39 +66,41 @@ That's it! Now, modify the view using the `configure(_:style:to:)` modifier.
 struct ContentView: View {
     var body: some View {
         MyButton()
-            .configure(
-                MyButton.self, 
-                style: \.textColor, 
-                to: .green
-            )
+            .configure(MyButtonStyles.self, style: \.textColor, to: .green)
     }
 }
 ```
 
-## Config property wrapper
-The `@Stylish` macro automactically add `@Config` attribute on style properties.
+## Styling Component
+The `@Stylish` macro automatically adds the `@Config` attribute to each style property. It helps you to create a custom style like `.buttonStyle(_:)`.
 
-When you create custom style like `.buttonSyle(_:)`, you need to set default styles.
-
-In `SwiftUI`, properties specified by the user using the view modifier have the highest priority. However, in styling, subsequent styles should override even if the user sets the style.
+In `SwiftUI`, properties specified by the user using view modifiers have the highest priority. However, in styling, subsequent styles should override even if the user has set the style.
 
 ```swift
 MyButton()
-    .configure(MyButton.self, style: \.style, to: .card)
-    .configure(MyButton.self, style: \.foregroundColor, to: .green)
+    .configure(MyButtonStyles.self, style: \.style, to: .card)
+    .configure(MyButtonStyles.self, style: \.textColor, to: .green)
 ```
 
-For example, with a card type `MyButtonStyle` setting the foreground color of the button title to blue, subsequent styles should override this, similar to a real `ButtonStyle`.
+For example, with a card-type `MyButtonStyle` setting the foreground color of the button title to "blue", subsequent styles should override this, similar to a real `ButtonStyle`.
 
-Utilize the `@Config` property wrapper for this:
+You can use `@Config` like this:
 
 ```swift
-public struct CardMyButtonStyle: MyButtonStyle {
+@Stylish
+struct MyButtonStyles {
+    var style: any MyButtonStyle = .plain
+    var textColor: Color = .black
+}
+
+/// Card style button. It sets the foreground color of the button title to blue.
+/// `styles.$foregroundColor(.blue)` is used to set the foreground color of the button title to blue.
+struct CardMyButtonStyle: MyButtonStyle {
     private struct Content: View {
         var body: some View {
             configuration.label
                 .configure(
-                    MyButton.self, 
+                    MyButtonStyles.self, 
                     style: \.foregroundColor,
                     to: styles.$foregroundColor(.blue)
                 )
@@ -106,7 +108,7 @@ public struct CardMyButtonStyle: MyButtonStyle {
         
         private let configuration: Configuration
         
-        @Styles(MyButton.self)
+        @Styles(MyButtonStyles.self)
         var styles
         
         init(_ configuration: Configuration) {
@@ -114,16 +116,43 @@ public struct CardMyButtonStyle: MyButtonStyle {
         }
     }
     
-    public func makeBody(_ configuration: Configuration) -> some View {
+    func makeBody(_ configuration: Configuration) -> some View {
         Content(configuration)
     }
 }
+
+struct MyButton: View {
+    private struct Content: View {
+        var body: some View {
+            Button {
+
+            } label: {
+                Text("Touch!")
+                    .foregroundColor(styles.textColor)
+            }
+        }
+
+        @Styles(MyButtonStyles.self)
+        var styles
+    }
+
+    var body: some View {
+        AnyView(
+            style.makeBody(.init(
+                label: .init(Content())
+            ))
+        )
+    }
+
+    @Styles(MyButtonStyles.self, style: \.style)
+    var style
+}
 ```
 
-The `projectedValue` of the `@Config` property wrapper returns a function, which only returns the value you pass in if the property is not specified.
+The `projectedValue` of the `@Config` property wrapper returns a function, which returns the value you pass in only if the property is not specified.
 
 # Contribution
 Any ideas, issues, opinions are welcome.
 
 # License
-Stylish is available under the MIT license. See the LICENSE file for more info.
+`Stylish` is available under the MIT license. See the LICENSE file for more info.
