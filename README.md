@@ -10,7 +10,7 @@ In 2019, the UI paradigm shifted when `Apple` introduced `SwiftUI`. The styling 
 - [Installation](#installation)
   - [Swift Package Manager](#swift-package-manager)
 - [Getting Started](#getting-started)
-  - [Styling Component](#styling-component)
+  - [Advanced Usage](#advanced-usage)
 - [Contribution](#contribution)
 - [License](#license)
 
@@ -26,23 +26,98 @@ In 2019, the UI paradigm shifted when `Apple` introduced `SwiftUI`. The styling 
 ## Swift Package Manager
 ```swift
 dependencies: [
-    .package(url: "https://github.com/wlsdms0122/Stylish.git", .upToNextMajor(from: "2.0.0"))
+    .package(url: "https://github.com/wlsdms0122/Stylish.git", from: "3.0.0")
 ]
 ```
 
 # Getting Started
 Using `Stylish` is straightforward. To create a styled component, add the `@Stylish` macro to your styles.
 
+The `@Stylish` macro automatically adopts the `Stylish` protocol to manage configurations.
+
 ```swift
 @Stylish
-struct MyButtonStyles {
-    var textColor: Color = .black
+struct MyButtonOption {
+    var backgroundColor: Color = .blue
 }
 ```
 
-The `@Stylish` macro automatically adopts the `Stylish` protocol to manage configurations.
+Then, add the `@StyledComponent` macro to your view. When you use the `@StyledComponent` macro, you can access the `option` property to style the view.
 
-You can access the `@Styles` property wrapper in your view to use `Stylish` styles for custom components.
+```swift
+@StyledComponent(MyButtonOption.self)
+struct MyButton: View {
+    var body: some View {
+        Button {
+
+        } label: {
+            Text("Touch!")
+                .backgroundColor(option.backgroundColor)
+        }
+    }
+}
+```
+
+That's it! Now, modify the view using the `config(_:style:to:)` modifier.
+
+```swift
+struct ContentView: View {
+    var body: some View {
+        MyButton()
+            .config(MyButton.self, style: \.backgroundColor, to: .green)
+    }
+}
+```
+
+## `@Stylish`
+
+The `Stylish` protocol is central to this library, representing a set of styles. You can use the `@Stylish` macro to simplify the creation of these style objects, or implement the `Stylish` protocol manually.
+
+### Using the `@Stylish` Macro
+
+The `@Stylish` macro is a convenient way to construct `Stylish` objects.
+
+```swift
+@Stylish
+struct MyButtonOption {
+    var backgroundColor: Color = .yellow
+}
+```
+
+### Manual Implementation
+
+Alternatively, you can manually implement the `Stylish` protocol.
+
+```swift
+struct MyButtonOption: Stylish {
+    @Config
+    var backgroundColor: Color = .yellow
+
+    init() { }
+}
+```
+
+### Separation by Meaning
+
+`Stylish` objects can be separated by their styling purpose. For example, you might have different structs for foreground and background styling.
+
+```swift
+@Stylish
+struct ButtonForegroundOption {
+    var color: Color = .black
+}
+
+@Stylish
+struct ButtonBackgroundOption {
+    var color: Color = .yellow
+}
+```
+
+This separation allows for more modular and reusable style definitions.
+
+## `@Style`
+
+You can use the `@Style` property wrapper to access the entire set of styles defined in a `Stylish` object.
 
 ```swift
 struct MyButton: View {
@@ -51,65 +126,95 @@ struct MyButton: View {
 
         } label: {
             Text("Touch!")
-                .foregroundColor(styles.textColor)
+                .backgroundColor(option.backgroundColor)
         }
     }
 
-    @Styles(MyButtonStyles.self)
-    private var styles
+    @Style(MyButtonOption.self)
+    private var option
 }
 ```
 
-That's it! Now, modify the view using the `configure(_:style:to:)` modifier.
+If you only need to access specific style properties, you can do so by specifying the desired property in the `@Style` property wrapper.
 
 ```swift
-struct ContentView: View {
+@Style(MyButtonOption.self, style: \.backgroundColor)
+private var backgroundColor
+```
+
+## `@StyledComponent`
+
+The basic pattern is that one view has its own style set. While there are many ways to do this, you can use the `@StyledComponent` macro to reduce the boilerplate in the most basic implementations.
+
+```swift
+@StyledComponent(MyButtonOption.self)
+struct MyButton: View {
     var body: some View {
-        MyButton()
-            .configure(MyButtonStyles.self, style: \.textColor, to: .green)
+        Button {
+
+        } label: {
+            Text("Touch!")
+                .backgroundColor(option.backgroundColor)
+        }
     }
 }
 ```
 
-## Styling Component
+The `StyledComponent` protocol requires defining the `StyleOption` type.
+
+It makes it easier to organize and access. The `@Style` property wrapper needs a `Stylish` object type, but `StyledComponent` is also allowed.
+
+```swift
+@Style(MyButton.self)
+private var option
+```
+
+The `config` view modifier is also allowed with `StyledComponent`.
+
+```swift
+MyButton { ... }
+    .config(MyButton.self, style: \.backgroundColor, to: .green)
+```
+
+## Advanced Usage
+### Styling Component
 The `@Stylish` macro automatically adds the `@Config` attribute to each style property. It helps you to create a custom style like `.buttonStyle(_:)`.
 
 In `SwiftUI`, properties specified by the user using view modifiers have the highest priority. However, in styling, subsequent styles should override even if the user has set the style.
 
 ```swift
 MyButton()
-    .configure(MyButtonStyles.self, style: \.style, to: .card)
-    .configure(MyButtonStyles.self, style: \.textColor, to: .green)
+    .config(MyButton.self, style: \.style, to: .card)
+    .config(MyButton.self, style: \.backgroundColor, to: .green)
 ```
 
-For example, with a card-type `MyButtonStyle` setting the foreground color of the button title to "blue", subsequent styles should override this, similar to a real `ButtonStyle`.
+For example, with a card-type `MyButtonOption` setting the background color of the button to "blue", subsequent styles should override this, similar to a real `ButtonStyle`.
 
 You can use `@Config` like this:
 
 ```swift
 @Stylish
-struct MyButtonStyles {
+struct MyButtonOption {
     var style: any MyButtonStyle = .plain
-    var textColor: Color = .black
+    var backgroundColor: Color = .yellow
 }
 
-/// Card style button. It sets the foreground color of the button title to blue.
-/// `styles.$foregroundColor(.blue)` is used to set the foreground color of the button title to blue.
+/// Card style button, It sets the background color of the button to blue until overridden by another style.
 struct CardMyButtonStyle: MyButtonStyle {
     private struct Content: View {
         var body: some View {
             configuration.label
-                .configure(
-                    MyButtonStyles.self, 
-                    style: \.foregroundColor,
-                    to: styles.$foregroundColor(.blue)
+                .config(
+                    MyButton.self, 
+                    style: \.backgroundColor,
+                    to: option.$backgroundColor(.blue)
                 )
         }
         
         private let configuration: Configuration
         
-        @Styles(MyButtonStyles.self)
-        var styles
+        @Style(MyButton.self)
+        var option
         
         init(_ configuration: Configuration) {
             self.configuration = configuration
@@ -121,6 +226,7 @@ struct CardMyButtonStyle: MyButtonStyle {
     }
 }
 
+@StyledComponent(MyButtonOption.self)
 struct MyButton: View {
     private struct Content: View {
         var body: some View {
@@ -128,24 +234,21 @@ struct MyButton: View {
 
             } label: {
                 Text("Touch!")
-                    .foregroundColor(styles.textColor)
+                    .backgroundColor(option.backgroundColor)
             }
         }
 
-        @Styles(MyButtonStyles.self)
-        var styles
+        @Style(MyButton.self)
+        var option
     }
 
     var body: some View {
         AnyView(
-            style.makeBody(.init(
+            option.style.makeBody(.init(
                 label: .init(Content())
             ))
         )
     }
-
-    @Styles(MyButtonStyles.self, style: \.style)
-    var style
 }
 ```
 
