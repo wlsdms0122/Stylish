@@ -29,4 +29,12 @@ public extension View {
         
         return environment(stylePath, value)
     }
+    
+    func configure<Component: StyledComponent, Value>(
+        _ component: Component.Type,
+        style keyPath: WritableKeyPath<Component.StyleOption, Value>,
+        to value: Value
+    ) -> some View {
+        configure(Component.StyleOption.self, style: keyPath, to: value)
+    }
 }
