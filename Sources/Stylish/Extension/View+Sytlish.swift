@@ -15,7 +15,7 @@ extension EnvironmentValues {
 }
 
 public extension View {
-    func configure<S: Stylish, Value>(
+    func config<S: Stylish, Value>(
         _ style: S.Type,
         style keyPath: WritableKeyPath<S, Value>,
         to value: Value
@@ -30,11 +30,11 @@ public extension View {
         return environment(stylePath, value)
     }
     
-    func configure<Component: StyledComponent, Value>(
+    func config<Component: StyledComponent, Value>(
         _ component: Component.Type,
         style keyPath: WritableKeyPath<Component.StyleOption, Value>,
         to value: Value
     ) -> some View {
-        configure(Component.StyleOption.self, style: keyPath, to: value)
+        config(Component.StyleOption.self, style: keyPath, to: value)
     }
 }
