@@ -18,9 +18,7 @@ extension StylishMacro: ExtensionMacro {
         conformingTo protocols: [TypeSyntax],
         in context: some MacroExpansionContext
     ) throws -> [ExtensionDeclSyntax] {
-        let extenstion = DeclSyntax("""
-            extension \(type.trimmed): Stylish { }
-            """)
+        let extenstion: DeclSyntax = "extension \(type.trimmed): Stylish { }"
         
         return [
             extenstion
@@ -39,12 +37,8 @@ extension StylishMacro: MemberMacro {
             throw StylishError("@Stylish can use struct only.")
         }
         
-        var initializer: DeclSyntax
-        if let accessModifier = structDecl.accessModifier?.name.text {
-            initializer = "\(raw: accessModifier) init() { }"
-        } else {
-            initializer = "init() { }"
-        }
+        let accessModifier = structDecl.accessModifier
+        let initializer: DeclSyntax = "\(accessModifier)init() { }"
         
         return [
             initializer
@@ -59,7 +53,7 @@ extension StylishMacro: MemberAttributeMacro {
         providingAttributesFor member: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
-        return [
+        [
             AttributeSyntax(
                 leadingTrivia: [.newlines(1), .spaces(2)],
                 attributeName: IdentifierTypeSyntax(

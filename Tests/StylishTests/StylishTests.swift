@@ -1,45 +1,95 @@
+//
+//  StylishTests.swift
+//
+//
+//  Created by jsilver on 11/26/23.
+//
+
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-
-// Macro implementations build for the host, so the corresponding module is not available when cross-compiling. Cross-compiled tests may still make use of the macro itself in end-to-end tests.
 #if canImport(StylishMacros)
 import StylishMacros
 
-let testMacros: [String: Macro.Type] = [
-    "Stylish": StylishMacro.self,
-]
-#endif
-
-final class StylishTests: XCTestCase {
-    func testStylishMacro() throws {
-        #if canImport(StylishMacros)
-        assertMacroExpansion(
-            #"""
+final class StylishMacroTests: XCTestCase {
+    // MARK: - Property
+    let macros = ["Stylish": StylishMacro.self]
+    
+    // MARK: - Lifecycle
+    
+    // MARK: - Test
+    func testExpansionEmptyOption() throws {
+        assertMacroExpansion("""
             @Stylish
-            public struct Configuration {
-                var backgroundColor: Color = .black
-                var foregroundColor: Color = .black
-            }
-            """#,
-            expandedSource: #"""
-            public struct Configuration {
-                @Config
-                var backgroundColor: Color = .black
-                @Config
-                var foregroundColor: Color = .black
+            struct Option { 
             
+            }
+            """,
+            expandedSource:
+            """
+            struct Option { 
+
+                init() {
+                }
+
+            }
+
+            extension Option: Stylish {
+            }
+            """,
+            macros: macros
+        )
+    }
+    
+    func testExpansionOption() throws {
+        assertMacroExpansion(
+            """
+            @Stylish
+            struct Option { 
+                var text: String = "hello world"
+            }
+            """,
+            expandedSource:
+            """
+            struct Option { 
+                @Config
+                var text: String = "hello world"
+
+                init() {
+                }
+            }
+
+            extension Option: Stylish {
+            }
+            """,
+            macros: macros
+        )
+    }
+    
+    func testExpansionPublicOption() throws {
+        assertMacroExpansion(
+            """
+            @Stylish
+            public struct Option { 
+                public var text: String = "hello world"
+            }
+            """,
+            expandedSource:
+            """
+            public struct Option { 
+                @Config
+                public var text: String = "hello world"
+
                 public init() {
                 }
             }
-            
-            extension Configuration: Stylish {
+
+            extension Option: Stylish {
             }
-            """#,
-            macros: testMacros
+            """,
+            macros: macros
         )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
     }
 }
+
+#endif
