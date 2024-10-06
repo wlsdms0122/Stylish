@@ -33,9 +33,6 @@ final class StyledComponentTests: XCTestCase {
             struct CustomView: View { 
 
                 typealias StyleOption = Option
-
-                @Style(StyleOption.self)
-                private var option
                 
             }
 
@@ -61,9 +58,6 @@ final class StyledComponentTests: XCTestCase {
             public struct CustomView: View { 
 
                 public typealias StyleOption = Option
-
-                @Style(StyleOption.self)
-                private var option
                 
             }
 
