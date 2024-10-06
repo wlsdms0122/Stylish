@@ -42,10 +42,9 @@ struct MyButtonOption {
 }
 ```
 
-Then, add the `@StyledComponent` macro to your view. When you use the `@StyledComponent` macro, you can access the `option` property to style the view.
+Then, add the `option` property using the `@Style` property wrapper.
 
 ```swift
-@StyledComponent(MyButtonOption.self)
 struct MyButton: View {
     var body: some View {
         Button {
@@ -55,6 +54,9 @@ struct MyButton: View {
                 .backgroundColor(option.backgroundColor)
         }
     }
+
+    @Style(MyButtonOption.self)
+    private var option
 }
 ```
 
@@ -64,7 +66,7 @@ That's it! Now, modify the view using the `config(_:style:to:)` modifier.
 struct ContentView: View {
     var body: some View {
         MyButton()
-            .config(MyButton.self, style: \.backgroundColor, to: .green)
+            .config(MyButtonOption.self, style: \.backgroundColor, to: .green)
     }
 }
 ```
@@ -144,20 +146,11 @@ private var backgroundColor
 
 ## `@StyledComponent`
 
-The basic pattern is that one view has its own style set. While there are many ways to do this, you can use the `@StyledComponent` macro to reduce the boilerplate in the most basic implementations.
+The `StyledComponent` is a nickname for styles. You can rename a `Stylish` option if the option object name is too long.
 
 ```swift
 @StyledComponent(MyButtonOption.self)
-struct MyButton: View {
-    var body: some View {
-        Button {
-
-        } label: {
-            Text("Touch!")
-                .backgroundColor(option.backgroundColor)
-        }
-    }
-}
+enum BtnOpt { }
 ```
 
 The `StyledComponent` protocol requires defining the `StyleOption` type.
@@ -165,7 +158,7 @@ The `StyledComponent` protocol requires defining the `StyleOption` type.
 It makes it easier to organize and access. The `@Style` property wrapper needs a `Stylish` object type, but `StyledComponent` is also allowed.
 
 ```swift
-@Style(MyButton.self)
+@Style(BtnOpt.self)
 private var option
 ```
 
@@ -173,7 +166,7 @@ The `config` view modifier is also allowed with `StyledComponent`.
 
 ```swift
 MyButton { ... }
-    .config(MyButton.self, style: \.backgroundColor, to: .green)
+    .config(BtnOpt.self, style: \.backgroundColor, to: .green)
 ```
 
 ## Advanced Usage

@@ -43,14 +43,8 @@ extension StyledComponentMacro: MemberMacro {
         let accessModifier = declaration.accessModifier
         let typealiasDeclaration: DeclSyntax = "\(accessModifier)typealias StyleOption = \(optionType)"
         
-        let optionProperty: DeclSyntax = """
-            @Style(StyleOption.self)
-            private var option
-            """
-        
         return [
-            typealiasDeclaration,
-            optionProperty
+            typealiasDeclaration
         ]
     }
 }
