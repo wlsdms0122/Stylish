@@ -90,6 +90,37 @@ final class StylishMacroTests: XCTestCase {
             macros: macros
         )
     }
-}
+    
+    func testExpansionDeclration() throws {
+        assertMacroExpansion(
+            """
+            @Stylish
+            public struct Option { 
+                enum Mode { }
+                enum Style { }
+                public var text: String = "hello world"
+                public var color: Color = .black
+            }
+            """,
+            expandedSource:
+            """
+            public struct Option { 
+                enum Mode { }
+                enum Style { }
+                @Config
+                public var text: String = "hello world"
+                @Config
+                public var color: Color = .black
 
+                public init() {
+                }
+            }
+
+            extension Option: Stylish {
+            }
+            """,
+            macros: macros
+        )
+    }
+}
 #endif

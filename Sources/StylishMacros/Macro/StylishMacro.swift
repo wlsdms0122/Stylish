@@ -53,9 +53,10 @@ extension StylishMacro: MemberAttributeMacro {
         providingAttributesFor member: some DeclSyntaxProtocol,
         in context: some MacroExpansionContext
     ) throws -> [AttributeSyntax] {
-        [
+        guard member.is(VariableDeclSyntax.self) else { return [] }
+        
+        return [
             AttributeSyntax(
-                leadingTrivia: [.newlines(1), .spaces(2)],
                 attributeName: IdentifierTypeSyntax(
                     name: .identifier("Config")
                 )
