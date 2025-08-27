@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-extension EnvironmentValues {
-    var container: StyleContainer {
-        get { self[StyleContainer.Key.self] }
-        set { self[StyleContainer.Key.self] = newValue }
-    }
-}
-
 public extension View {
     func config<S: Stylish, Value>(
         _ style: S.Type,
@@ -22,7 +15,7 @@ public extension View {
     ) -> some View {
         let member = String(describing: style)
         
-        let originPath = \EnvironmentValues.container
+        let originPath: WritableKeyPath<EnvironmentValues, StyleContainer> = \EnvironmentValues.container
         let configurationPath: WritableKeyPath<StyleContainer, S> = \StyleContainer.[dynamicMember: member]
         let stylePath = originPath.appending(path: configurationPath)
             .appending(path: keyPath)

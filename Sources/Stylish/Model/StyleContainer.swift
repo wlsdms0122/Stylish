@@ -8,13 +8,9 @@
 import SwiftUI
 
 @dynamicMemberLookup
-struct StyleContainer {
-    struct Key: EnvironmentKey {
-        public static var defaultValue = StyleContainer()
-    }
-    
+struct StyleContainer: Sendable {
     // MARK: - Property
-    private var styles: [String: Any] = [:]
+    private nonisolated(unsafe) var styles: [String: Any] = [:]
 
     subscript<S: Stylish>(dynamicMember member: String) -> S {
         get {
@@ -31,4 +27,9 @@ struct StyleContainer {
     // MARK: - Public
     
     // MARK: - Private
+}
+
+extension EnvironmentValues {
+    @Entry
+    var container: StyleContainer = StyleContainer()
 }
